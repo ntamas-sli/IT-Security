@@ -1,0 +1,4 @@
+Passphrases for
+- test_keypair.pem: crysys
+- test_ciphertext_1.crypted: adishamir
+- test_ciphertext_2.crypted: ronrivest
