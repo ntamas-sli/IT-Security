@@ -1,1 +1,5 @@
 venv\Scripts\activate
+
+1. feladat
+py aes_cbc.py -e -p adishamir -i test_plaintext_1.txt -o test_plaintext_1_out.txt
+
