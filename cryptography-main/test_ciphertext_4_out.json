@@ -1,0 +1,10 @@
+Gauss
+=====
+
+There are many remaining mysteries in the Gauss and Flame stories. For instance, how do people get infected with the malware? Or, what is the purpose of the uniquely named Palida Narrow font that Gauss installs?
+
+Perhaps the most interesting mystery is Gauss encrypted warhead. Gauss contains a module named Godel that features an encrypted payload. The malware tries to decrypt this payload using several strings from the system and, upon success, executes it. 
+
+More precisely, infected USB sticks have two files that contain several encrypted sections. Named System32.dat and System32.bin, they are 32-bit and 64-bit versions of the same code. These files are loaded from infected drives using the well-known LNK exploit introduced by Stuxnet. Their primary goal is to extract a lot of information about the victim system and write it back to a file on the drive named .thumbs.db. Several known versions of the files contain three encrypted sections (one code section, two data sections).
+
+The decryption key for these sections is generated dynamically and depends on the features of the victim system, preventing anyone except the designated target(s) from extracting the contents of the sections.

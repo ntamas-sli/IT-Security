@@ -3,3 +3,11 @@ venv\Scripts\activate
 1. feladat
 py aes_cbc.py -e -p adishamir -i test_plaintext_1.txt -o test_plaintext_1_out.txt
 
+2. feladat
+py aes_cbc.py -d -p ronrivest -i  test_ciphertext_2.crypted -o  test_ciphertext_2_out.txt
+
+3. feladat 
+py hybrid.py -e -p test_pubkey.pem -i test_plaintext_3.txt  -o test_plaintext_3_out.json 
+
+4. feladat
+py hybrid.py -d -p test_pubkey.pem  -s test_keypair.pem -i test_ciphertext_4.crypted -o test_ciphertext_4_out.txt
