@@ -187,163 +187,176 @@ class CIFF:
         # TODO: surround the parsing code with a try-except block and
         # TODO: set the is_valid property to False
         # TODO: if an Exception has been raised
-        #try:
-        with open(file_path, "rb") as ciff_file:
-            # read the magic bytes
-            magic = ciff_file.read(4)
-            # read may not return the requested number of bytes
-            # TODO: magic must contain 4 bytes. If not, raise Exception
-            #if len(magic) != ____:
-            #    raise Exception(____)
-            bytes_read += 4
-            # decode the bytes as 4 characters
-            new_ciff.magic = magic.decode('ascii')
-            # TODO: the magic must be "CIFF". If not, raise Exception
-            #if new_ciff.magic != ____:
-            #    new_ciff.is_valid = ____
-            #    raise ____
+        try:
+            with open(file_path, "rb") as ciff_file:
+                # read the magic bytes
+                magic = ciff_file.read(4)
+                # read may not return the requested number of bytes
+                # TODO: magic must contain 4 bytes. If not, raise Exception
+                #if len(magic) != ____:
+                #    raise Exception(____)
+                if len(magic) != 4:
+                    raise Exception("Invalid image: magic bytes not found")
+                bytes_read += 4
+                # decode the bytes as 4 characters
+                new_ciff.magic = magic.decode('ascii')
+                # TODO: the magic must be "CIFF". If not, raise Exception
+                #if new_ciff.magic != ____:
+                #    new_ciff.is_valid = ____
+                #    raise ____
+                if new_ciff.magic != "CIFF":
+                    new_ciff.is_valid = False
+                    raise Exception("Invalid image: magic bytes do not match")
+                # read the header size
+                h_size = ciff_file.read(8)
+                # TODO: h_size must contain 8 bytes. If not, raise Exception
+                #if len(____) != ____:
+                #    raise ____
+                if len(h_size) != 8:
+                    raise Exception("Invalid image: header size not found")
+                bytes_read += 8
+                # interpret the bytes as an 8-byte-long integer
+                # unpack returns a list
+                # HINT: check the "q" format specifier!
+                # HINT: Does it fit our purposes?
+                new_ciff.header_size = struct.unpack("q", h_size)[0]
+                # the header size must be in [38, 2^64 - 1]
+                # TODO: check the value range. If not in range, raise Exception
+                #if new_ciff.header_size < ____ \
+                #        or new_ciff.header_size > ____:
+                #    ____
+                if new_ciff.header_size < 38 or new_ciff.header_size > 2**64 - 1:
+                    raise Exception("Invalid image: header size out of range")
+                # read the content size
+                c_size = ciff_file.read(8)
+                # TODO: c_size must contain 8 bytes. If not, raise Exception
+                #if len(____) != ____:
+                #    ____
+                if len(c_size) != 8:
+                    raise Exception("Invalid image: content size not found")
+                bytes_read += 8
+                # interpret the bytes as an 8-byte-long integer
+                # HINT: check out the "q" format specifier!
+                # HINT: Does it fit our purposes?
+                new_ciff.content_size = struct.unpack("q", c_size)[0]
+                # the content size must be in [0, 2^64 - 1]
+                # TODO: check the value range. If not in range, raise Exception
+                # Question: is this check necessary?
+                #if new_ciff.content_size < ____ or \
+                #        new_ciff.content_size > ____:
+                #    ____
+                if new_ciff.content_size < 0 or new_ciff.content_size > 2**64 - 1:
+                    raise Exception("Invalid image: content size out of range")
 
-            # read the header size
-            h_size = ciff_file.read(8)
-            # TODO: h_size must contain 8 bytes. If not, raise Exception
-            #if len(____) != ____:
-            #    raise ____
-            bytes_read += 8
-            # interpret the bytes as an 8-byte-long integer
-            # unpack returns a list
-            # HINT: check the "q" format specifier!
-            # HINT: Does it fit our purposes?
-            new_ciff.header_size = struct.unpack("q", h_size)[0]
-            # the header size must be in [38, 2^64 - 1]
-            # TODO: check the value range. If not in range, raise Exception
-            #if new_ciff.header_size < ____ \
-            #        or new_ciff.header_size > ____:
-            #    ____
+                # read the width
+                width = ciff_file.read(8)
+                # TODO: check if width contains 8 bytes
+                #if ____ != ____:
+                #    ____
+                if len(width) != 8:
+                    raise Exception("Invalid image: width not found")
+                bytes_read += 8
+                # interpret the bytes as an 8-byte-long integer
+                # HINT: check out the "q" format specifier!
+                # HINT: Does it fit our purposes?
+                new_ciff.width = struct.unpack("q", width)[0]
+                # the width must be in [0, 2^64 - 1]
+                # TODO: check the value range. If not in range, raise Exception
+                # Question: is this check necessary?
+                #if ____:
+                #    ____
 
-            # read the content size
-            c_size = ciff_file.read(8)
-            # TODO: c_size must contain 8 bytes. If not, raise Exception
-            #if len(____) != ____:
-            #    ____
-            bytes_read += 8
-            # interpret the bytes as an 8-byte-long integer
-            # HINT: check out the "q" format specifier!
-            # HINT: Does it fit our purposes?
-            new_ciff.content_size = struct.unpack("q", c_size)[0]
-            # the content size must be in [0, 2^64 - 1]
-            # TODO: check the value range. If not in range, raise Exception
-            # Question: is this check necessary?
-            #if new_ciff.content_size < ____ or \
-            #        new_ciff.content_size > ____:
-            #    ____
+                # read the height
+                height = ciff_file.read(8)
+                # TODO: check if height contains 8 bytes
+                #if ____:
+                #    ____
+                bytes_read += 8
+                # interpret the bytes as an 8-byte-long integer
+                # HINT: check out the "q" format specifier!
+                # HINT: Does it fit our purposes?
+                new_ciff.height = struct.unpack("q", height)[0]
+                # the height must be in [0, 2^64 - 1]
+                # TODO: check the value range
+                # Question: is this check necessary?
+                #____
+                #    ____
 
-            # read the width
-            width = ciff_file.read(8)
-            # TODO: check if width contains 8 bytes
-            #if ____ != ____:
-            #    ____
-            bytes_read += 8
-            # interpret the bytes as an 8-byte-long integer
-            # HINT: check out the "q" format specifier!
-            # HINT: Does it fit our purposes?
-            new_ciff.width = struct.unpack("q", width)[0]
-            # the width must be in [0, 2^64 - 1]
-            # TODO: check the value range. If not in range, raise Exception
-            # Question: is this check necessary?
-            #if ____:
-            #    ____
+                # TODO: content size must equal width*height*3
+                #if ____:
+                #    ____
 
-            # read the height
-            height = ciff_file.read(8)
-            # TODO: check if height contains 8 bytes
-            #if ____:
-            #    ____
-            bytes_read += 8
-            # interpret the bytes as an 8-byte-long integer
-            # HINT: check out the "q" format specifier!
-            # HINT: Does it fit our purposes?
-            new_ciff.height = struct.unpack("q", height)[0]
-            # the height must be in [0, 2^64 - 1]
-            # TODO: check the value range
-            # Question: is this check necessary?
-            #____
-            #    ____
-
-            # TODO: content size must equal width*height*3
-            #if ____:
-            #    ____
-
-            # read the name of the image character by character
-            caption = ""
-            c = ciff_file.read(1)
-            # TODO: check if c contains 1 byte
-            #___
-            #    ____
-            bytes_read += 1
-            char = c.decode('ascii')
-            # read until the first '\n' (caption cannot contain '\n')
-            while char != '\n':
-                # append read character to caption
-                caption += char
-                # read next character
+                # read the name of the image character by character
+                caption = ""
                 c = ciff_file.read(1)
                 # TODO: check if c contains 1 byte
                 #___
                 #    ____
                 bytes_read += 1
                 char = c.decode('ascii')
-            new_ciff.caption = caption
+                # read until the first '\n' (caption cannot contain '\n')
+                while char != '\n':
+                    # append read character to caption
+                    caption += char
+                    # read next character
+                    c = ciff_file.read(1)
+                    # TODO: check if c contains 1 byte
+                    #___
+                    #    ____
+                    bytes_read += 1
+                    char = c.decode('ascii')
+                new_ciff.caption = caption
 
-            # read all the tags
-            tags = list()
-            # read until the end of the header
-            tag = ""
-            while bytes_read != new_ciff.header_size:
-                c = ciff_file.read(1)
-                # TODO: check if c contains 1 byte
-                if len(c) != 1:
-                    raise Exception("Invalid image")
-                bytes_read += 1
-                char = c.decode('ascii')
-                # tags should not contain '\n'
-                # TODO: char must not be a '\n'
-                #if ____ == ____:
+                # read all the tags
+                tags = list()
+                # read until the end of the header
+                tag = ""
+                while bytes_read != new_ciff.header_size:
+                    c = ciff_file.read(1)
+                    # TODO: check if c contains 1 byte
+                    if len(c) != 1:
+                        raise Exception("Invalid image")
+                    bytes_read += 1
+                    char = c.decode('ascii')
+                    # tags should not contain '\n'
+                    # TODO: char must not be a '\n'
+                    #if ____ == ____:
+                    #    ____
+                    # tags are separated by terminating nulls
+                    tag += char
+                    if char == '\0':
+                        tags.append(tag)
+                        tag = ""
+                    # the very last character in the header must be a '\0'
+                    # TODO: check the last character of the header
+                    #if (bytes_read == ____) and ____:
+                    #    ____
+                
+                # all tags must end with '\0'
+                # TODO: check the end of each tag for the '\0'
+                #for tag in tags:
+                #    if tag[____] != ____:
+                #        ____
+
+                new_ciff.tags = tags
+                
+                # read the pixels
+                while bytes_read < new_ciff.header_size+new_ciff.content_size:
+                    c = ciff_file.read(3)
+                    # TODO: check if c contains 3 bytes
+                    #___
+                    #    ____
+                    bytes_read += 3
+                    pixel = struct.unpack("BBB", c)
+                    new_ciff.pixels.append(pixel)
+
+                # we should have reached the end of the file
+                # TODO: try to read a byte. If successful, raise Exception
+                #____
+                #____
                 #    ____
-                # tags are separated by terminating nulls
-                tag += char
-                if char == '\0':
-                    tags.append(tag)
-                    tag = ""
-                # the very last character in the header must be a '\0'
-                # TODO: check the last character of the header
-                #if (bytes_read == ____) and ____:
-                #    ____
-            
-            # all tags must end with '\0'
-            # TODO: check the end of each tag for the '\0'
-            #for tag in tags:
-            #    if tag[____] != ____:
-            #        ____
 
-            new_ciff.tags = tags
-            
-            # read the pixels
-            while bytes_read < new_ciff.header_size+new_ciff.content_size:
-                c = ciff_file.read(3)
-                # TODO: check if c contains 3 bytes
-                #___
-                #    ____
-                bytes_read += 3
-                pixel = struct.unpack("BBB", c)
-                new_ciff.pixels.append(pixel)
-
-            # we should have reached the end of the file
-            # TODO: try to read a byte. If successful, raise Exception
-            #____
-            #____
-            #    ____
-
-        #except Exception as e:
-        #    new_ciff.is_valid = False
+        except Exception as e:
+            new_ciff.is_valid = False
 
         return new_ciff
