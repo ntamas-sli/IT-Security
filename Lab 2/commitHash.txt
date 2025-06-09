@@ -4,6 +4,8 @@
 3   - 5e62145b96f2725919f8dbaeb62af608366b2fbe
 4   - 9eb3d4c255eea69aceb80aa183ff2866c4ee50f0
 
++   - f5317abea2ebfc23ae0d8ed4d2e8636259f7974f
+
 Moodle kerdes:
 	A mypy által jelzett hiba kijavítása után mi a helyes sor?
 		296: new_ciff.tags = tag -> new_ciff.tags = tags
