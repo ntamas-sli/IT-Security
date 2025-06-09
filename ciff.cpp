@@ -120,3 +120,20 @@ CIFF* parse(const char* filepath) {
 
     return result_ptr;
 }
+
+//int main() {
+//    std::string path = "./test-vectors/test1.ciff";
+//    CIFF ciff = CIFF::parse_ciff(path);
+//
+//    if (ciff.is_valid) {
+//        std::cout << "CIFF file parsed successfully!" << std::endl;
+//        std::cout << "Magic: " << ciff.magic << std::endl;
+//        std::cout << "Width: " << ciff.width << ", Height: " << ciff.height << std::endl;
+//        std::cout << "Caption: " << ciff.caption << std::endl;
+//        std::cout << "Number of tags: " << ciff.tags.size() << std::endl;
+//    } else {
+//        std::cerr << "Failed to parse CIFF file." << std::endl;
+//    }
+//
+//    return 0;
+//}
