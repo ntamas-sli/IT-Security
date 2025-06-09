@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <tuple>
+#include <cstring>
 
 class CIFF {
 public:
@@ -18,7 +19,7 @@ public:
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> pixels;
     bool is_valid = true;
 
-    static CIFF parse_ciff(const std::string& path) {
+    static CIFF parse(const std::string& path) {
         CIFF ciff;
         std::ifstream file(path, std::ios::binary);
         if (!file) {
@@ -109,18 +110,6 @@ private:
         return val;
     }
 };
-
-extern "C" __declspec(dllexport)
-CIFF* parse(const char* filepath) {
-    std::string path(filepath);
-
-    CIFF result = CIFF::parse_ciff(path);
-
-    CIFF* result_ptr = new CIFF(result);
-
-    return result_ptr;
-}
-
 //int main() {
 //    std::string path = "./test-vectors/test1.ciff";
 //    CIFF ciff = CIFF::parse_ciff(path);
@@ -137,3 +126,77 @@ CIFF* parse(const char* filepath) {
 //
 //    return 0;
 //}
+extern "C" {
+    struct RGBPixel {
+        uint8_t r, g, b;
+    };
+
+    struct CIFF_Export {
+        const char* magic;
+        int64_t header_size;
+        int64_t content_size;
+        int64_t width;
+        int64_t height;
+        const char* caption;
+        const char** tags;
+        RGBPixel* pixels;
+        bool is_valid;
+    };
+
+    __declspec(dllexport) CIFF_Export* parse(const char* path) {
+        CIFF ciff = CIFF::parse(path);
+        if (!ciff.is_valid) return nullptr;
+
+        CIFF_Export* export_data = new CIFF_Export;
+        static char magic_buffer[5];
+        strncpy(magic_buffer, ciff.magic.c_str(), 4);
+        magic_buffer[4] = '\0';
+        export_data->magic = magic_buffer;
+        export_data->header_size = ciff.header_size;
+        export_data->content_size = ciff.content_size;
+        export_data->width = ciff.width;
+        export_data->height = ciff.height;
+
+        size_t len = ciff.caption.size();
+        char* caption_buffer = new char[len + 1];
+        memcpy(caption_buffer, ciff.caption.c_str(), len + 1);
+        export_data->caption = caption_buffer;
+
+        // Allocate tags
+        export_data->tags = new const char*[ciff.tags.size()];
+        for (size_t i = 0; i < ciff.tags.size(); ++i) {
+            len = ciff.tags[i].size();
+            char* tag_buffer = new char[len + 1];
+            memcpy(tag_buffer, ciff.tags[i].c_str(), len + 1);
+            export_data->tags[i] = tag_buffer;
+        }
+
+        // Allocate pixels
+        size_t pixel_count = ciff.pixels.size();
+        export_data->pixels = new RGBPixel[pixel_count];
+        for (size_t i = 0; i < pixel_count; ++i) {
+            auto& pixel = ciff.pixels[i];
+            export_data->pixels[i] = { std::get<0>(pixel), std::get<1>(pixel), std::get<2>(pixel) };
+        }
+
+        export_data->is_valid = true;
+        return export_data;
+    }
+
+    __declspec(dllexport) void free_ciff(CIFF_Export* data) {
+        if (!data) return;
+
+        delete[] data->caption;
+
+        if (data->tags) {
+            for (size_t i = 0; data->tags[i] != nullptr; ++i) {
+                delete[] data->tags[i];
+            }
+            delete[] data->tags;
+        }
+
+        delete[] data->pixels;
+
+        delete data;
+    }
+}

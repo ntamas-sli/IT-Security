@@ -4,7 +4,7 @@ from ciff import CIFF
 from os import listdir
 from os.path import join, extsep
 from PIL import Image, ImageTk
-from ciff_native import load_native_ciff_image
+#from ciff_native import load_native_ciff_image
 
 
 class Window(Frame):
@@ -61,8 +61,8 @@ class Window(Frame):
             return
 
         try:
-            ciff_image = load_native_ciff_image(file_path)
-            #ciff_image = CIFF.parse_ciff_file(file_path)
+            #ciff_image = load_native_ciff_image(file_path)
+            ciff_image = CIFF.parse_ciff_file(file_path)
             if not ciff_image.is_valid:
                 raise ValueError("Invalid CIFF image!")
 

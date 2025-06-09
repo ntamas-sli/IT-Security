@@ -19,3 +19,8 @@ or
 ```bash
 python3 moodle_submission.py
 ```
+
+
+g++ -shared -o ciff_parser.dll ciff.cpp -static -m64
+
+venv\Scripts\activate
