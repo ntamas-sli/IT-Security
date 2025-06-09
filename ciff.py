@@ -265,12 +265,15 @@ class CIFF:
                 # Question: is this check necessary?
                 #if ____:
                 #    ____
-
+                if new_ciff.width < 0 or new_ciff.width > 2**64 - 1:
+                    raise Exception("Invalid image: width out of range")
                 # read the height
                 height = ciff_file.read(8)
                 # TODO: check if height contains 8 bytes
                 #if ____:
                 #    ____
+                if len(height) != 8:
+                    raise Exception("Invalid image: height not found")
                 bytes_read += 8
                 # interpret the bytes as an 8-byte-long integer
                 # HINT: check out the "q" format specifier!
@@ -281,17 +284,21 @@ class CIFF:
                 # Question: is this check necessary?
                 #____
                 #    ____
-
+                if new_ciff.height < 0 or new_ciff.height > 2**64 - 1:
+                    raise Exception("Invalid image: height out of range")
                 # TODO: content size must equal width*height*3
                 #if ____:
                 #    ____
-
+                if new_ciff.content_size != new_ciff.width * new_ciff.height * 3:
+                    raise Exception("Invalid image: content size does not match dimensions")
                 # read the name of the image character by character
                 caption = ""
                 c = ciff_file.read(1)
                 # TODO: check if c contains 1 byte
                 #___
                 #    ____
+                if len(c) != 1:
+                    raise Exception("Invalid image: caption not found")
                 bytes_read += 1
                 char = c.decode('ascii')
                 # read until the first '\n' (caption cannot contain '\n')
@@ -303,6 +310,8 @@ class CIFF:
                     # TODO: check if c contains 1 byte
                     #___
                     #    ____
+                    if len(c) != 1:
+                        raise Exception("Invalid image: caption not found")
                     bytes_read += 1
                     char = c.decode('ascii')
                 new_ciff.caption = caption
@@ -322,6 +331,8 @@ class CIFF:
                     # TODO: char must not be a '\n'
                     #if ____ == ____:
                     #    ____
+                    if char == '\n':
+                        raise Exception("Invalid image: tags must not contain newline characters")
                     # tags are separated by terminating nulls
                     tag += char
                     if char == '\0':
@@ -331,21 +342,27 @@ class CIFF:
                     # TODO: check the last character of the header
                     #if (bytes_read == ____) and ____:
                     #    ____
-                
+                    if (bytes_read == new_ciff.header_size) and (char != '\0'):
+                        raise Exception("Invalid image: header must end with a null character")
+
                 # all tags must end with '\0'
                 # TODO: check the end of each tag for the '\0'
                 #for tag in tags:
                 #    if tag[____] != ____:
                 #        ____
-
+                for tag in tags:
+                    if tag[-1] != '\0':
+                        raise Exception("Invalid image: tags must end with a null character")
                 new_ciff.tags = tags
-                
+
                 # read the pixels
                 while bytes_read < new_ciff.header_size+new_ciff.content_size:
                     c = ciff_file.read(3)
                     # TODO: check if c contains 3 bytes
                     #___
                     #    ____
+                    if len(c) != 3:
+                        raise Exception("Invalid image: pixel data not found")
                     bytes_read += 3
                     pixel = struct.unpack("BBB", c)
                     new_ciff.pixels.append(pixel)
@@ -355,6 +372,8 @@ class CIFF:
                 #____
                 #____
                 #    ____
+                if ciff_file.read(1):
+                    raise Exception("Invalid image: extra data found after pixel data")
 
         except Exception as e:
             new_ciff.is_valid = False
