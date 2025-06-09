@@ -40,15 +40,9 @@ class CIFF:
         self._height: int = height_long
         self._caption: str = caption_string
 
-        if tags_list is None:
-            self._tags: List[str] = []
-        else:
-            self._tags: List[str] = tags_list
+        self.tags_list: List[str] = tags_list if tags_list is not None else []
 
-        if pixels_list is None:
-            self._pixels: List[Tuple[int, int, int]] = []
-        else:
-            self._pixels: List[Tuple[int, int, int]] = pixels_list
+        self.pixels_list: List[Tuple[int, int, int]] = pixels_list if pixels_list is not None else []
 
         self._is_valid: bool = True
 
@@ -299,7 +293,7 @@ class CIFF:
                 for tag in tags:
                     if tag[-1] != '\0':
                         raise Exception("Tag terminating character error")
-                new_ciff.tags = tag
+                new_ciff.tags = tags
 
                 # read the pixels
                 while bytes_read < new_ciff.header_size+new_ciff.content_size:
