@@ -248,6 +248,8 @@ class CIFF:
                     raise Exception("Invalid hight value")
 
                 #TODO: maybe something is missing here
+                if new_ciff.content_size != new_ciff.width * new_ciff.height * 3:
+                    raise Exception("Invalid height: height is ULONG_MAX")
 
                 # read the name of the image character by character
                 caption = ""
