@@ -2,6 +2,7 @@
 1.2 - 5145cb0bb7304ff22729eeab2e8106aefabdde9f
 2   - a6f49f7d3fff227b85ee1f319917c9f856384c66
 3   - 5e62145b96f2725919f8dbaeb62af608366b2fbe
+4   - 9eb3d4c255eea69aceb80aa183ff2866c4ee50f0
 
 Moodle kerdes:
 	A mypy által jelzett hiba kijavítása után mi a helyes sor?
