@@ -40,9 +40,9 @@ class CIFF:
         self._height: int = height_long
         self._caption: str = caption_string
 
-        self.tags_list: List[str] = tags_list if tags_list is not None else []
+        self._tags: List[str] = tags_list if tags_list is not None else []
 
-        self.pixels_list: List[Tuple[int, int, int]] = pixels_list if pixels_list is not None else []
+        self._pixels: List[Tuple[int, int, int]] = pixels_list if pixels_list is not None else []
 
         self._is_valid: bool = True
 
