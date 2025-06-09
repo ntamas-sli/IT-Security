@@ -20,8 +20,4 @@ public:
     static CIFF parse_ciff_file(const std::string& file_path);
 };
 
-extern "C" {
-    __declspec(dllexport) int parse_ciff(const char* filename, uint8_t** pixel_data, int* width, int* height);
-}
-
 #endif

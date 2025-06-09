@@ -1,30 +1,38 @@
 import ctypes
-from ctypes import c_char_p, c_int64, c_uint8, POINTER, Structure
 import os
 
-
-class Pixel(Structure):
-    _fields_ = [("r", c_uint8), ("g", c_uint8), ("b", c_uint8)]
-
-
-class CIFF(Structure):
+# CIFF
+class CIFF(ctypes.Structure):
     _fields_ = [
+        ("magic", ctypes.c_char * 5),
+        ("header_size", ctypes.c_uint64),
+        ("content_size", ctypes.c_uint64),
+        ("width", ctypes.c_uint64),
+        ("height", ctypes.c_uint64),
+        ("caption", ctypes.c_char_p),
+        ("tags", ctypes.POINTER(ctypes.c_char_p)),
+        ("tag_count", ctypes.c_size_t),
+        ("pixels", ctypes.POINTER(ctypes.c_ubyte)),
+        ("pixel_count", ctypes.c_size_t),
         ("is_valid", ctypes.c_bool),
-        ("magic", c_char_p),
-        ("header_size", c_int64),
-        ("content_size", c_int64),
-        ("width", c_int64),
-        ("height", c_int64),
-        ("caption", c_char_p),
-        ("tags", c_char_p),
-        ("pixels", Pixel),
     ]
 
+dll_path = os.path.abspath("ciff_parser.dll")
+ciff_lib = ctypes.CDLL(dll_path)
 
-lib = ctypes.CDLL("./ciff.dll")
+ciff_lib.parse_ciff.argtypes = [ctypes.c_char_p]
+ciff_lib.parse_ciff.restype = ctypes.POINTER(CIFF)
 
-def load_native_ciff_image(file_path: str) -> CIFF:
-    img_ptr = lib.parse_ciff_file(file_path.encode("utf-8"))
-    if not img_ptr:
-        raise RuntimeError("Parser returned null pointer")
-    return img_ptr.contents
+ciff_obj_ptr = ciff_lib.parse_ciff(b"example.ciff")
+ciff = ciff_obj_ptr.contents
+
+print("CIFF valid:", ciff.is_valid)
+print("Magic:", ciff.magic.decode())
+print("Size:", ciff.width, "x", ciff.height)
+print("Caption:", ciff.caption.decode())
+
+print("Tags:")
+for i in range(ciff.tag_count):
+    print("-", ciff.tags[i].decode())
+
+print("Pixel count:", ciff.pixel_count)

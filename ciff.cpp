@@ -1,107 +1,114 @@
-#include "CIFF.hpp"
-#include <fstream>
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <cstdint>
 #include <stdexcept>
+#include <tuple>
 
-using namespace std;
+class CIFF {
+public:
+    std::string magic;
+    int64_t header_size = 0;
+    int64_t content_size = 0;
+    int64_t width = 0;
+    int64_t height = 0;
+    std::string caption;
+    std::vector<std::string> tags;
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> pixels;
+    bool is_valid = true;
 
-extern "C" {
-
-CIFF CIFF::parse_ciff_file(const string& file_path) {
-    CIFF ciff;
-    size_t bytes_read = 0;
-
-    try {
-        ifstream file(file_path, ios::binary);
-        if (!file) throw runtime_error("Cannot open file");
-
-        char magic_buf[4];
-        file.read(magic_buf, 4);
-        if (file.gcount() != 4) throw runtime_error("Magic bytes missing");
-        ciff.magic = string(magic_buf, 4);
-        bytes_read += 4;
-
-        if (ciff.magic != "CIFF") throw runtime_error("Magic does not match");
-
-        auto read_int64 = [&](int64_t& target) {
-            char buf[8];
-            file.read(buf, 8);
-            if (file.gcount() != 8) throw runtime_error("Failed to read int64");
-            target = *reinterpret_cast<int64_t*>(buf);
-            bytes_read += 8;
-        };
-
-        read_int64(ciff.header_size);
-        if (ciff.header_size < 38 || ciff.header_size > INT64_MAX)
-            throw runtime_error("Invalid header size");
-
-        read_int64(ciff.content_size);
-        if (ciff.content_size < 0)
-            throw runtime_error("Invalid content size");
-
-        read_int64(ciff.width);
-        if (ciff.width <= 0)
-            throw runtime_error("Invalid width");
-
-        read_int64(ciff.height);
-        if (ciff.height <= 0)
-            throw runtime_error("Invalid height");
-
-        if (ciff.content_size != ciff.width * ciff.height * 3)
-            throw runtime_error("Content size does not match dimensions");
-
-        // Read caption
-        char ch;
-        while (file.get(ch) && ch != '\n') {
-            ciff.caption += ch;
-            bytes_read++;
+    static CIFF parse_ciff(const std::string& path) {
+        CIFF ciff;
+        std::ifstream file(path, std::ios::binary);
+        if (!file) {
+            ciff.is_valid = false;
+            return ciff;
         }
-        if (file.eof()) throw runtime_error("Caption not terminated");
-        bytes_read++; // for '\n'
 
-        // Read tags
-        string tag;
-        while (bytes_read < static_cast<size_t>(ciff.header_size)) {
-            file.get(ch);
-            if (file.eof()) throw runtime_error("Unexpected EOF while reading tags");
-            bytes_read++;
-            if (ch == '\n') throw runtime_error("Tags must not contain newline");
-            tag += ch;
-            if (ch == '\0') {
-                ciff.tags.push_back(tag);
-                tag.clear();
+        try {
+            // Read magic
+            char magic_buf[4];
+            file.read(magic_buf, 4);
+            if (file.gcount() != 4) throw std::runtime_error("Invalid magic size");
+            ciff.magic = std::string(magic_buf, 4);
+            if (ciff.magic != "CIFF") throw std::runtime_error("Magic mismatch");
+
+            // Read header size
+            ciff.header_size = read_int64(file);
+            if (ciff.header_size < 38) throw std::runtime_error("Invalid header size");
+
+            // Read content size
+            ciff.content_size = read_int64(file);
+            if (ciff.content_size < 0) throw std::runtime_error("Invalid content size");
+
+            // Read width and height
+            ciff.width = read_int64(file);
+            ciff.height = read_int64(file);
+            if (ciff.width < 0 || ciff.height < 0) throw std::runtime_error("Invalid dimensions");
+
+            // Validate content size
+            if (ciff.content_size != ciff.width * ciff.height * 3)
+                throw std::runtime_error("Content size mismatch");
+
+            // Read caption
+            char ch;
+            while (file.get(ch)) {
+                if (ch == '\n') break;
+                ciff.caption += ch;
             }
+            if (file.eof()) throw std::runtime_error("Unexpected EOF in caption");
+
+            // Read tags
+            int64_t bytes_read = 36 + ciff.caption.size() + 1;
+            std::string tag;
+            while (bytes_read < ciff.header_size) {
+                if (!file.get(ch)) throw std::runtime_error("Unexpected EOF in tags");
+                bytes_read++;
+                if (ch == '\n') throw std::runtime_error("Newline in tag not allowed");
+                tag += ch;
+                if (ch == '\0') {
+                    ciff.tags.push_back(tag);
+                    tag.clear();
+                }
+                if (bytes_read == ciff.header_size && ch != '\0')
+                    throw std::runtime_error("Header must end with null terminator");
+            }
+
+            // Validate tag endings
+            for (const auto& t : ciff.tags) {
+                if (t.empty() || t.back() != '\0')
+                    throw std::runtime_error("Tag must end with null character");
+            }
+
+            // Read pixels
+            int64_t pixel_bytes = 0;
+            while (pixel_bytes < ciff.content_size) {
+                uint8_t rgb[3];
+                file.read(reinterpret_cast<char*>(rgb), 3);
+                if (file.gcount() != 3) throw std::runtime_error("Incomplete pixel");
+                ciff.pixels.emplace_back(rgb[0], rgb[1], rgb[2]);
+                pixel_bytes += 3;
+            }
+
+            // Check for extra bytes
+            if (file.get(ch)) throw std::runtime_error("Extra data after pixels");
+
+        } catch (...) {
+            ciff.is_valid = false;
         }
-        if (tag.size() > 0) throw runtime_error("Header must end with null");
 
-        for (const auto& t : ciff.tags) {
-            if (t.back() != '\0') throw runtime_error("Tag must end with null");
-        }
-
-        // Read pixels
-        size_t pixel_count = ciff.width * ciff.height;
-        for (size_t i = 0; i < pixel_count; ++i) {
-            char rgb[3];
-            file.read(rgb, 3);
-            if (file.gcount() != 3) throw runtime_error("Failed to read pixel");
-            ciff.pixels.emplace_back(
-                static_cast<uint8_t>(rgb[0]),
-                static_cast<uint8_t>(rgb[1]),
-                static_cast<uint8_t>(rgb[2])
-            );
-            bytes_read += 3;
-        }
-
-        // Check for extra data
-        char extra;
-        if (file.get(extra)) throw runtime_error("Extra data found");
-
-    } catch (exception& e) {
-        ciff.is_valid = false;
-        cerr << "Error parsing CIFF: " << e.what() << endl;
+        return ciff;
     }
 
-    return ciff;
-}
+private:
+    static int64_t read_int64(std::ifstream& file) {
+        int64_t val;
+        file.read(reinterpret_cast<char*>(&val), 8);
+        if (file.gcount() != 8) throw std::runtime_error("Failed to read int64");
+        return val;
+    }
+};
 
-}
+extern "C" __declspec(dllexport)
+CIFF* parse(const char* filepath);
