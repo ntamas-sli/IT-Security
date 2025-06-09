@@ -111,4 +111,12 @@ private:
 };
 
 extern "C" __declspec(dllexport)
-CIFF* parse(const char* filepath);
+CIFF* parse(const char* filepath) {
+    std::string path(filepath);
+
+    CIFF result = CIFF::parse_ciff(path);
+
+    CIFF* result_ptr = new CIFF(result);
+
+    return result_ptr;
+}

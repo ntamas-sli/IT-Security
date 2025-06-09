@@ -1,38 +1,39 @@
 import ctypes
-import os
+from ctypes import c_char_p, Structure, POINTER, c_int64, c_bool, c_uint8
 
-# CIFF
-class CIFF(ctypes.Structure):
+# Definiáljuk a struct-okat Pythonban is
+class RGBPixel(ctypes.Structure):
+    _fields_ = [("r", c_uint8),
+                ("g", c_uint8),
+                ("b", c_uint8)]
+
+class CIFF(Structure):
     _fields_ = [
-        ("magic", ctypes.c_char * 5),
-        ("header_size", ctypes.c_uint64),
-        ("content_size", ctypes.c_uint64),
-        ("width", ctypes.c_uint64),
-        ("height", ctypes.c_uint64),
+        ("magic", ctypes.c_char_p),
+        ("header_size", c_int64),
+        ("content_size", c_int64),
+        ("width", c_int64),
+        ("height", c_int64),
         ("caption", ctypes.c_char_p),
-        ("tags", ctypes.POINTER(ctypes.c_char_p)),
-        ("tag_count", ctypes.c_size_t),
-        ("pixels", ctypes.POINTER(ctypes.c_ubyte)),
-        ("pixel_count", ctypes.c_size_t),
-        ("is_valid", ctypes.c_bool),
+        ("tags", POINTER(c_char_p)),        # pointer tömb (feltételezve, hogy így van exportálva)
+        ("pixels", POINTER(RGBPixel)),      # pointer pixel tömbhöz
+        ("is_valid", c_bool)
     ]
 
-dll_path = os.path.abspath("ciff_parser.dll")
-ciff_lib = ctypes.CDLL(dll_path)
+# Betöltjük a DLL-t
+lib = ctypes.cdll.LoadLibrary("./ciff_parser.dll")
 
-ciff_lib.parse_ciff.argtypes = [ctypes.c_char_p]
-ciff_lib.parse_ciff.restype = ctypes.POINTER(CIFF)
+# Beállítjuk a függvény típusát
+lib.parse.argtypes = [c_char_p]
+lib.parse.restype = POINTER(CIFF)
 
-ciff_obj_ptr = ciff_lib.parse_ciff(b"example.ciff")
-ciff = ciff_obj_ptr.contents
+# Meghívjuk
+filepath = b"example.ciff"  # bináris string!
+ciff_ptr = lib.parse(filepath)
 
-print("CIFF valid:", ciff.is_valid)
-print("Magic:", ciff.magic.decode())
-print("Size:", ciff.width, "x", ciff.height)
-print("Caption:", ciff.caption.decode())
-
-print("Tags:")
-for i in range(ciff.tag_count):
-    print("-", ciff.tags[i].decode())
-
-print("Pixel count:", ciff.pixel_count)
+if ciff_ptr.contents.is_valid:
+    print("Magic:", ciff_ptr.contents.magic.decode('ascii'))
+    print("Caption:", ciff_ptr.contents.caption.decode('utf-8'))
+    # stb.
+else:
+    print("Érvénytelen CIFF fájl")
