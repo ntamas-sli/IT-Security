@@ -196,7 +196,10 @@ class CIFF:
                     raise Exception("Invalid magic length")
                 bytes_read += 4
                 # decode the bytes as 4 characters
-                new_ciff.magic = magic.decode('ascii')
+                try:
+                    new_ciff.magic = magic.decode('ascii', errors='strict')
+                except UnicodeDecodeError:
+                    raise Exception("Invalid magic: non-ASCII characters found")
                 if new_ciff.magic != "CIFF":
                     new_ciff.is_valid = False
                     raise Exception("Invalid magic value")
@@ -209,7 +212,7 @@ class CIFF:
                 # interpret the bytes as an 8-byte-long integer
                 # unpack returns a list
                 new_ciff.header_size = struct.unpack("Q", h_size)[0]
-                
+
                 #TODO: maybe something is missing here
 
                 # read the content size
@@ -257,7 +260,10 @@ class CIFF:
                 if len(c) != 1:
                     raise Exception(f"No more character left in caption. Caption is: {caption}")
                 bytes_read += 1
-                char = c.decode('ascii')
+                try:
+                    char = c.decode('ascii', errors='strict')
+                except UnicodeDecodeError:
+                    raise Exception("Invalid caption: non-ASCII characters found")
                 # read until the first '\n' (caption cannot contain '\n')
                 while char != '\n':
                     # append read character to caption
@@ -267,7 +273,10 @@ class CIFF:
                     if len(c) != 1:
                         raise Exception(f"No more character left in caption. Caption is: {caption}")
                     bytes_read += 1
-                    char = c.decode('ascii')
+                    try:
+                        char = c.decode('ascii', errors='strict')
+                    except UnicodeDecodeError:
+                        raise Exception("Invalid caption: non-ASCII characters found")
                 new_ciff.caption = caption
 
                 # read all the tags
@@ -279,7 +288,10 @@ class CIFF:
                     if len(c) != 1:
                         raise Exception("Invalid block header size")
                     bytes_read += 1
-                    char = c.decode('ascii')
+                    try:
+                        char = c.decode('ascii', errors='strict')
+                    except UnicodeDecodeError:
+                        raise Exception("Invalid tag: non-ASCII characters found")
                     # tags should not contain '\n'
                     if char == '\n':
                         raise Exception("Invalid image")

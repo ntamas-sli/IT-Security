@@ -8,3 +8,5 @@ Moodle kerdes:
 		296: new_ciff.tags = tag -> new_ciff.tags = tags
 	Melyik három tagváltozót kellett ellenőrizni, ami megoldotta a hibás tesztet? (Csak a változók nevét adja meg, vesszővel elválasztva! pl.: a, b, c)
 		content_size, width, height, content_size = width * height * 3
+	Mi annak a ciff fájlnak a neve, ami bár helyes teszt eredményt ad, mégis helytelenül fut le?
+	    invalid3.ciff, non-ASCII karakter volt benne
