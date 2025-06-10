@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <cstring>
+#include <cmath>
 
 class CIFF {
 public:
@@ -47,7 +48,7 @@ public:
             ciff.width = read_int64(file);
             ciff.height = read_int64(file);
             if (ciff.width < 0 || ciff.height < 0) throw std::runtime_error("Invalid dimensions");
-
+            if (ciff.width / 2 > pow(2, 63) - 1 || ciff.height / 2 > pow(2, 63) - 1) throw std::runtime_error("Dimensions too large");
             // Validate content size
             if (ciff.content_size != ciff.width * ciff.height * 3)
                 throw std::runtime_error("Content size mismatch");
