@@ -170,6 +170,7 @@ extern "C" {
             memcpy(tag_buffer, ciff.tags[i].c_str(), len + 1);
             export_data->tags[i] = tag_buffer;
         }
+        export_data->tags[ciff.tags.size()] = nullptr;
 
         // Allocate pixels
         size_t pixel_count = ciff.pixels.size();
